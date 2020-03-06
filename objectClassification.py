@@ -6,6 +6,18 @@ from tensorflow.keras.layers import Conv2D, MaxPooling2D
 from tensorflow.keras.optimizers import Adam, SGD, RMSprop
 import matplotlib.pyplot as plt
 from tensorflow.keras.utils import to_categorical
+from skimage import data
+from skimage.color import rgb2gray
+import numpy as np
+
+def grayscale(data):
+    data_holder = []
+    for i in range(len(data)):
+        data_holder.append(rgb2gray(data[i]))
+    data_holder = np.array(data_holder)
+    data_holder = data_holder.reshape(len(data_holder), 32, 32, 1)
+    return data_holder
+
 
 IMG_CHANNELS = 3
 IMG_ROWS = 32
@@ -18,26 +30,33 @@ VERBOSE = 1
 VALIDATION_SPLIT = 0.2
 OPTIM = RMSprop()
 
+# Loading data
 (x_train, y_train), (x_test, y_test) = cifar10.load_data()
+
 # Normalization
 x_train = x_train/255.0
 x_test = x_test/255.0
 y_train = to_categorical(y_train, CLASSES)
 y_test = to_categorical(y_test, CLASSES)
-# Create the network:
 
+# convert to grayscale
+x_train = grayscale(x_train)
+x_test = grayscale(x_test)
+
+# Create the network:
 model = Sequential()
 
-model.add(Conv2D(32, (3, 3), padding='same', input_shape=(IMG_ROWS, IMG_COLS, IMG_CHANNELS)))
+model.add(Conv2D(32, (3, 3), input_shape = x_train.shape[1:]))
+#model.add(Conv2D(32, (3, 3), padding='same', input_shape = x_train.shape[1:]))
 model.add(Activation('relu'))
 
-model.add(Conv2D(32, (3, 3), padding='same'))
+model.add(Conv2D(32, (3, 3)))
 model.add(Activation('relu'))
 
 model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Dropout(0.25))
 
-model.add(Conv2D(64, (3, 3), padding='same'))
+model.add(Conv2D(64, (3, 3)))
 model.add(Activation('relu'))
 
 model.add(MaxPooling2D(pool_size=(2, 2)))
